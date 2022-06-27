@@ -39,6 +39,30 @@ def create_user_quiz(db: Session, quiz: schemas.QuizCreate, user_id: int):
     return db_quiz
 
 
+def get_questions(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Question).offset(skip).limit(limit).all()
+
+
+def create_quiz_question(db: Session, question: schemas.QuestionCreate, quiz_id: int):
+    db_quiz = models.Question(**question.dict(), quiz_id=quiz_id)
+    db.add(db_quiz)
+    db.commit()
+    db.refresh(db_quiz)
+    return db_quiz
+
+
+def get_answers(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Answer).offset(skip).limit(limit).all()
+
+
+def create_question_answer(db: Session, answer: schemas.AnswerCreate, question_id: int):
+    db_quiz = models.Answer(**answer.dict(), question_id=question_id)
+    db.add(db_quiz)
+    db.commit()
+    db.refresh(db_quiz)
+    return db_quiz
+
+
 def get_items(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Item).offset(skip).limit(limit).all()
 

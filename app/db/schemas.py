@@ -40,6 +40,40 @@ class Quiz(QuizBase):
         orm_mode = True
 
 
+class QuestionBase(BaseModel):
+    description: str
+    single_correct_answer: bool
+
+
+class QuestionCreate(QuestionBase):
+    is_active = bool
+
+
+class Question(QuestionBase):
+    id: int
+    quiz_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class AnswerBase(BaseModel):
+    description: str
+    is_correct: bool
+
+
+class AnswerCreate(AnswerBase):
+    is_active = bool
+
+
+class Answer(AnswerBase):
+    id: int
+    question_id: int
+
+    class Config:
+        orm_mode = True
+
+
 class UserBase(BaseModel):
     email: str
 

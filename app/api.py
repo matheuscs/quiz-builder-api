@@ -7,7 +7,8 @@ from app.auth.auth_handler import create_access_token, decode_jwt, \
     credentials_exception
 from app.db import models, schemas
 from app.db.crud import get_user_by_email, get_quizes, get_users, create_user, \
-    create_user_quiz
+    create_user_quiz, get_questions, create_quiz_question, get_answers, \
+    create_question_answer
 from app.db.database import engine, SessionLocal
 from app.db.schemas import Token
 
@@ -64,9 +65,40 @@ def getquizes(db: Session = Depends(get_db)):
 
 @app.post("/users/{user_id}/quiz/", response_model=schemas.Quiz)
 def create_quiz_for_user(
-    user_id: int, quiz: schemas.QuizCreate, db: Session = Depends(get_db)
+        user_id: int,
+        quiz: schemas.QuizCreate,
+        db: Session = Depends(get_db)
 ):
     return create_user_quiz(db=db, quiz=quiz, user_id=user_id)
+
+
+@app.get("/questions")
+def getquestions(db: Session = Depends(get_db)):
+    return get_questions(db)
+
+
+@app.post("/quiz/{quiz_id}/question/", response_model=schemas.Question)
+def create_question_for_quiz(
+        quiz_id: int,
+        question: schemas.QuestionCreate,
+        db: Session = Depends(get_db)
+):
+    return create_quiz_question(db=db, question=question, quiz_id=quiz_id)
+
+
+@app.get("/answers")
+def getanswers(db: Session = Depends(get_db)):
+    return get_answers(db)
+
+
+@app.post("/question/{question_id}/answer/", response_model=schemas.Answer)
+def create_anwswer_for_question(
+        question_id: int,
+        answer: schemas.AnswerCreate,
+        db: Session = Depends(get_db)
+):
+    return create_question_answer(db=db, answer=answer,
+                                  question_id=question_id)
 
 
 #

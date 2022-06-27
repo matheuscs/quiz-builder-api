@@ -7,56 +7,6 @@ class Token(BaseModel):
     token_type: str
 
 
-class ItemBase(BaseModel):
-    title: str
-    description: Union[str, None] = None
-
-
-class ItemCreate(ItemBase):
-    pass
-
-
-class Item(ItemBase):
-    id: int
-    owner_id: int
-
-    class Config:
-        orm_mode = True
-
-
-class QuizBase(BaseModel):
-    title: str
-
-
-class QuizCreate(QuizBase):
-    is_active = bool
-
-
-class Quiz(QuizBase):
-    id: int
-    user_id: int
-
-    class Config:
-        orm_mode = True
-
-
-class QuestionBase(BaseModel):
-    description: str
-    single_correct_answer: bool
-
-
-class QuestionCreate(QuestionBase):
-    is_active = bool
-
-
-class Question(QuestionBase):
-    id: int
-    quiz_id: int
-
-    class Config:
-        orm_mode = True
-
-
 class AnswerBase(BaseModel):
     description: str
     is_correct: bool
@@ -74,6 +24,41 @@ class Answer(AnswerBase):
         orm_mode = True
 
 
+class QuestionBase(BaseModel):
+    description: str
+    single_correct_answer: bool
+
+
+class QuestionCreate(QuestionBase):
+    is_active = bool
+
+
+class Question(QuestionBase):
+    id: int
+    quiz_id: int
+    answers: list[Answer] = []
+
+    class Config:
+        orm_mode = True
+
+
+class QuizBase(BaseModel):
+    title: str
+
+
+class QuizCreate(QuizBase):
+    is_active = bool
+
+
+class Quiz(QuizBase):
+    id: int
+    user_id: int
+    questions: list[Question] = []
+
+    class Config:
+        orm_mode = True
+
+
 class UserBase(BaseModel):
     email: str
 
@@ -85,7 +70,7 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
     is_active: bool
-    items: list[Item] = []
+    quizes: list[Quiz] = []
 
     class Config:
         orm_mode = True

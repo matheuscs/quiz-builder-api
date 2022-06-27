@@ -41,10 +41,9 @@ def i_am_alive():
 
 
 @app.get("/alive_secure")
-async def hello_name(token: str = Depends(oauth2_scheme)):
+async def i_am_alive_and_secure(token: str = Depends(oauth2_scheme)):
     decode_jwt(token)
     return {"msg": "i'm alive and secure"}
-
 
 
 # USERS

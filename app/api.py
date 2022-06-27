@@ -52,7 +52,7 @@ def create_user(user: schemas.UserCreate,
                 db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
     if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=409, detail="Email already registered")
     return crud.create_user(db=db, user=user)
 
 
@@ -70,7 +70,10 @@ def get_user_by_id(user_id: int,
 def get_user_by_email(email,
                       db: Session = Depends(get_db),
                       token: str = Depends(oauth2_scheme)):
-    return crud.get_user_by_email(db, email)
+    db_user = crud.get_user_by_email(db, email=email)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
 
 
 @app.get("/users")
@@ -115,7 +118,7 @@ def create_question_for_quiz(
 ):
     db_quiz = get_quiz_by_id(quiz_id, db)
     if len(db_quiz.questions) >= 10:
-        raise HTTPException(status_code=403,
+        raise HTTPException(status_code=409,
                             detail="Maximum questions for a quiz reached: 10")
     return crud.create_quiz_question(db=db, question=question, quiz_id=quiz_id)
 
@@ -147,7 +150,7 @@ def create_anwswer_for_question(
     db_question = get_question_by_id(question_id, db)
     print(f'{db_question.answers}')
     if len(db_question.answers) >= 5:
-        raise HTTPException(status_code=403,
+        raise HTTPException(status_code=409,
                             detail="Maximum answers for a question reached: 5")
     return crud.create_question_answer(db=db, answer=answer,
                                        question_id=question_id)

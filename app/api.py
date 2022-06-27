@@ -47,7 +47,7 @@ async def i_am_alive_and_secure(token: str = Depends(oauth2_scheme)):
 
 
 # USERS
-@app.post("/users/", response_model=schemas.User)
+@app.post("/users", response_model=schemas.User)
 def create_user(user: schemas.UserCreate,
                 db: Session = Depends(get_db),
                 token: str = Depends(oauth2_scheme)):
@@ -81,7 +81,7 @@ def get_all_users(db: Session = Depends(get_db),
 
 
 # QUIZES
-@app.post("/users/{user_id}/quiz/", response_model=schemas.Quiz)
+@app.post("/user/{user_id}/quiz", response_model=schemas.Quiz)
 def create_quiz_for_user(
         user_id: int,
         quiz: schemas.QuizCreate,
@@ -107,7 +107,7 @@ def get_all_quizes(db: Session = Depends(get_db),
 
 
 # QUESTIONS
-@app.post("/quiz/{quiz_id}/question/", response_model=schemas.Question)
+@app.post("/quiz/{quiz_id}/question", response_model=schemas.Question)
 def create_question_for_quiz(
         quiz_id: int,
         question: schemas.QuestionCreate,
@@ -138,7 +138,7 @@ def get_all_questions(db: Session = Depends(get_db),
 
 
 # ANSWERS
-@app.post("/question/{question_id}/answer/", response_model=schemas.Answer)
+@app.post("/question/{question_id}/answer", response_model=schemas.Answer)
 def create_anwswer_for_question(
         question_id: int,
         answer: schemas.AnswerCreate,

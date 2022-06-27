@@ -1,13 +1,26 @@
+from random import random
 from fastapi.testclient import TestClient
-from app.api import app
+from app.api import app, get_db
+from app.db.database import TestingSessionLocal
 
+
+def override_get_db():
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
-token = client.post('/token',
-                    data={'username': 'math@email.com', 'password': '123'}
-                    ).json()["access_token"]
-auth_headers = {'Authorization': f'Bearer {token}',
-                'Accept': 'application/json'}
+token = ''
+auth_headers = ''
+email = ''
+last_user_id = 0
+last_quiz_id = 0
+last_question_id = 0
 
 
 def test_alive():
@@ -26,12 +39,35 @@ def test_get_all_users_unauthorized():
     assert response.status_code == 401
 
 
+def test_create_user():
+    global email
+    email = f"newtester{random()}@testing.com"
+    response = client.post(
+        "/users",
+        json={
+            "email": email,
+            "password": "abc123"
+        },
+    )
+    assert response.status_code == 200, response.text
+
+    global last_user_id
+    last_user_id = response.json()['id']
+
+
 def test_authenticate():
     response = client.post(
         '/token',
-        data={'username': 'math@email.com', 'password': '123'}
+        data={'username': email, 'password': 'abc123'}
     )
     assert response.status_code == 200
+
+    global token
+    token = response.json()["access_token"]
+
+    global auth_headers
+    auth_headers = {'Authorization': f'Bearer {token}',
+                    'Accept': 'application/json'}
 
 
 def test_alive_secure():
@@ -43,3 +79,55 @@ def test_alive_secure():
 def test_get_all_users():
     response = client.get("/users", headers=auth_headers)
     assert response.status_code == 200
+
+
+def test_create_quiz_for_user():
+    response = client.post(
+        f'/user/{last_user_id}/quiz',
+        json={
+            "title": f"Incredible Quiz Number {random()}"
+        },
+        headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+
+    global last_quiz_id
+    last_quiz_id = response.json()['id']
+
+
+def test_create_questions_for_quiz():
+    global last_question_id
+    for i in range(11):
+        response = client.post(
+            f'/quiz/{last_quiz_id}/question',
+            json={
+                "description": f"Question {random()}",
+                "single_correct_answer": "true"
+            },
+            headers=auth_headers
+        )
+        if i < 10:
+            assert response.status_code == 200, response.text
+            last_question_id = response.json()['id']
+        else:
+            assert response.status_code == 409, response.text
+            assert response.json() == \
+                   {"detail": "Maximum questions for a quiz reached: 10"}
+
+
+def test_create_answers_for_questions():
+    for i in range(6):
+        response = client.post(
+            f'/question/{last_question_id}/answer',
+            json={
+                "description": f"Question {random()}",
+                "is_correct": "true"
+            },
+            headers=auth_headers
+        )
+        if i < 5:
+            assert response.status_code == 200, response.text
+        else:
+            assert response.status_code == 409, response.text
+            assert response.json() == \
+                   {"detail": "Maximum answers for a question reached: 5"}

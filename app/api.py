@@ -67,7 +67,7 @@ def get_user_by_id(user_id: int,
     return db_user
 
 
-@app.get("/users/{email}")
+@app.get("/users_by_email/{email}", response_model=schemas.User)
 def get_user_by_email(email,
                       db: Session = Depends(get_db),
                       token: str = Depends(oauth2_scheme)):

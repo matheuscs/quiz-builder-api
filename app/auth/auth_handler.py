@@ -16,13 +16,6 @@ credentials_exception = HTTPException(
 )
 
 
-def decode_jwt(token: str) -> dict:
-    try:
-        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-    except JWTError:
-        raise credentials_exception
-
-
 def create_access_token(data: dict):
     to_encode = data.copy()
     expires_delta = timedelta(minutes=int(JWT_ACCESS_TOKEN_EXPIRE_MINUTES))
@@ -33,3 +26,10 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return encoded_jwt
+
+
+def decode_jwt(token: str) -> dict:
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except JWTError:
+        raise credentials_exception

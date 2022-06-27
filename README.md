@@ -20,6 +20,13 @@ python -m venv venv && venv\Scripts\activate
 (venv)$ pip install -r requirements.txt
 ```
 
+### Create a .env in the project folder
+
+```
+SECRET_KEY = "generate yours with: openssl rand -hex 32"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+```
 
 ### Run
 ```

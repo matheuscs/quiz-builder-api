@@ -6,7 +6,7 @@ from decouple import config
 Base = declarative_base()
 
 # PROD
-SQLALCHEMY_DATABASE_URL = f"postgresql://{config('POSTGRES_USER')}:{config('POSTGRES_PASS')}@localhost:5433/{config('POSTGRES_DB')}"
+SQLALCHEMY_DATABASE_URL = f"postgresql://POSTGRES_USER:POSTGRES_PASS@localhost:5433/POSTGRES_DB"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

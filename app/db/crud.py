@@ -85,3 +85,7 @@ def create_question_answer(db: Session, answer: schemas.AnswerCreate, question_i
 def get_answers(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Answer).offset(skip).limit(limit).all()
 
+
+def get_answer_by_id(db: Session, answer_id: int):
+    return db.query(models.Answer).filter(models.Answer.id == answer_id).first()
+

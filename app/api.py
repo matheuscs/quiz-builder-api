@@ -48,7 +48,7 @@ def i_am_alive():
 @app.get("/alive_secure")
 def i_am_alive_and_secure(token: str = Depends(oauth2_scheme)):
     decode_jwt(token)
-    return {"msg": "i'm alive and secure"}
+    return {"msg": "I'm alive and secure"}
 
 
 # USERS
@@ -103,6 +103,9 @@ def create_quiz_for_user(
         db: Session = Depends(get_db),
         token: str = Depends(oauth2_scheme)
 ):
+    db_user = crud.get_user(db, user_id=user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
     return crud.create_user_quiz(db=db, quiz=quiz, user_id=user_id)
 
 
@@ -114,7 +117,7 @@ def get_quiz_by_id(
 ):
     db_quiz = crud.get_quiz(db, quiz_id=quiz_id)
     if db_quiz is None:
-        raise HTTPException(status_code=404, detail="Question not found")
+        raise HTTPException(status_code=404, detail="Quiz not found")
     return db_quiz
 
 
@@ -137,12 +140,10 @@ def update_quiz(
         db: Session = Depends(get_db),
         token: str = Depends(oauth2_scheme)
 ):
-    stored_quiz = crud.get_quiz(db, quiz_id=quiz_id)
-    if not stored_quiz:
-        raise HTTPException(
-            status_code=404
-        )
-    if stored_quiz.is_active:
+    db_quiz = crud.get_quiz(db, quiz_id=quiz_id)
+    if not db_quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    if db_quiz.is_active:
         raise HTTPException(
             status_code=405,
             detail="You can't update a published quiz."
@@ -155,7 +156,7 @@ def update_quiz(
          se cada pergunta tem pelo menos uma resposta certa
         """
         ...  # TODO
-    stored_quiz_model = schemas.QuizUpdate(**stored_quiz.__dict__)
+    stored_quiz_model = schemas.QuizUpdate(**db_quiz.__dict__)
     update_data = quiz.dict(exclude_unset=True)
     updated_quiz = stored_quiz_model.copy(update=update_data)
     crud.update_quiz(db, jsonable_encoder(updated_quiz), quiz_id)
@@ -171,6 +172,8 @@ def create_question_for_quiz(
         token: str = Depends(oauth2_scheme)
 ):
     db_quiz = get_quiz_by_id(quiz_id, db)
+    if not db_quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found.")
     if len(db_quiz.questions) >= 10:
         raise HTTPException(status_code=409,
                             detail="Maximum questions for a quiz reached: 10")
@@ -220,3 +223,15 @@ def get_all_answers(
         token: str = Depends(oauth2_scheme)
 ):
     return crud.get_answers(db)
+
+
+@app.get("/answer/{answer_id}")
+def get_all_answers(
+        answer_id: int,
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+    db_answer = crud.get_answer_by_id(db, answer_id)
+    if not db_answer:
+        raise HTTPException(status_code=404, detail="Answer not found")
+    return db_answer

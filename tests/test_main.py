@@ -73,12 +73,18 @@ def test_authenticate():
 def test_alive_secure():
     response = client.get("/alive_secure", headers=auth_headers)
     assert response.status_code == 200
-    assert response.json() == {"msg": "i'm alive and secure"}
+    assert response.json() == {"msg": "I'm alive and secure"}
 
 
 def test_get_all_users():
     response = client.get("/users", headers=auth_headers)
     assert response.status_code == 200
+
+
+def test_user_not_found():
+    response = client.get("/users/-1", headers=auth_headers)
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User not found"}
 
 
 def test_create_quiz_for_user():
@@ -103,6 +109,12 @@ def test_get_quiz_by_id():
 def test_get_quizes_for_user():
     response = client.get(f'/user/{last_user_id}/quizes', headers=auth_headers)
     assert response.status_code == 200, response.text
+
+
+def test_quiz_not_found():
+    response = client.get("/quiz/-1", headers=auth_headers)
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Quiz not found"}
 
 
 def test_update_quiz():
@@ -149,6 +161,12 @@ def test_create_questions_for_quiz():
                    {"detail": "Maximum questions for a quiz reached: 10"}
 
 
+def test_question_not_found():
+    response = client.get("/question/-1", headers=auth_headers)
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Question not found"}
+
+
 def test_create_answers_for_questions():
     for i in range(6):
         response = client.post(
@@ -165,3 +183,9 @@ def test_create_answers_for_questions():
             assert response.status_code == 409, response.text
             assert response.json() == \
                    {"detail": "Maximum answers for a question reached: 5"}
+
+
+def test_answer_not_found():
+    response = client.get("/answer/-1", headers=auth_headers)
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Answer not found"}

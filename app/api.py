@@ -118,14 +118,6 @@ def get_quiz_by_id(
     return db_quiz
 
 
-@app.get("/quizes")
-def get_all_quizes(
-        db: Session = Depends(get_db),
-        token: str = Depends(oauth2_scheme)
-):
-    return crud.get_quizes(db)
-
-
 @app.get('/user/{user_id}/quizes', response_model=List[schemas.Quiz])
 def get_quizes_for_user(
         user_id: int,
@@ -143,7 +135,7 @@ def update_quiz(
         quiz_id: int,
         quiz: schemas.QuizUpdate,
         db: Session = Depends(get_db),
-        # token: str = Depends(oauth2_scheme)
+        token: str = Depends(oauth2_scheme)
 ):
     stored_quiz = crud.get_quiz(db, quiz_id=quiz_id)
     if not stored_quiz:

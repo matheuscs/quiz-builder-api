@@ -45,10 +45,6 @@ def get_quiz(db: Session, quiz_id: int):
     return db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
 
 
-def get_quizes(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Quiz).offset(skip).limit(limit).all()
-
-
 def get_users_quizes(db: Session, user_id: int):
     return db.query(models.Quiz).filter(models.Quiz.user_id == user_id).all()
 

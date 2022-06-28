@@ -107,7 +107,7 @@ def create_quiz_for_user(
     db_user = crud.get_user(db, user_id=user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    return crud.create_user_quiz(db=db, quiz=quiz, user_id=user_id)
+    return crud.create_quiz(db=db, quiz=quiz, user_id=user_id)
 
 
 @app.get("/quizes/{quiz_id}", response_model=schemas.Quiz)
@@ -128,7 +128,7 @@ def get_quizes_for_user(
         db: Session = Depends(get_db),
         token: str = Depends(oauth2_scheme)
 ):
-    db_quiz = crud.get_users_quizes(db, user_id=user_id)
+    db_quiz = crud.get_quizes_by_user(db, user_id=user_id)
     if db_quiz is None:
         raise HTTPException(status_code=404, detail="Quiz not found")
     return db_quiz
@@ -191,7 +191,7 @@ def create_question_for_quiz(
     if len(db_quiz.questions) >= 10:
         raise HTTPException(status_code=409,
                             detail="Maximum questions for a quiz reached: 10")
-    return crud.create_quiz_question(db=db, question=question, quiz_id=quiz_id)
+    return crud.create_question(db=db, question=question, quiz_id=quiz_id)
 
 
 @app.get("/questions/{question_id}", response_model=schemas.Question)
@@ -231,8 +231,8 @@ def create_anwswer_for_question(
     if len(db_question.answers) >= 5:
         raise HTTPException(status_code=409,
                             detail="Maximum answers for a question reached: 5")
-    return crud.create_question_answer(db=db, answer=answer,
-                                       question_id=question_id)
+    return crud.create_answer(db=db, answer=answer,
+                              question_id=question_id)
 
 #
 # @app.get("/answers")

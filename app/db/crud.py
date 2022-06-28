@@ -24,7 +24,6 @@ def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
 
-
 def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.User).offset(skip).limit(limit).all()
 
@@ -35,7 +34,7 @@ def delete_user(db: Session, user_id: int):
 
 
 # QUIZES
-def create_user_quiz(db: Session, quiz: schemas.QuizCreate, user_id: int):
+def create_quiz(db: Session, quiz: schemas.QuizCreate, user_id: int):
     db_quiz = models.Quiz(**quiz.dict(), user_id=user_id)
     db.add(db_quiz)
     db.commit()
@@ -47,7 +46,7 @@ def get_quiz(db: Session, quiz_id: int):
     return db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
 
 
-def get_users_quizes(db: Session, user_id: int):
+def get_quizes_by_user(db: Session, user_id: int):
     return db.query(models.Quiz).filter(models.Quiz.user_id == user_id).all()
 
 
@@ -62,7 +61,7 @@ def delete_quiz(db: Session, quiz_id: int):
 
 
 # QUESTION
-def create_quiz_question(db: Session, question: schemas.QuestionCreate, quiz_id: int):
+def create_question(db: Session, question: schemas.QuestionCreate, quiz_id: int):
     db_quiz = models.Question(**question.dict(), quiz_id=quiz_id)
     db.add(db_quiz)
     db.commit()
@@ -82,7 +81,7 @@ def delete_question(db: Session, question_id: int):
 
 
 # ANSWERS
-def create_question_answer(db: Session, answer: schemas.AnswerCreate, question_id: int):
+def create_answer(db: Session, answer: schemas.AnswerCreate, question_id: int):
     db_quiz = models.Answer(**answer.dict(), question_id=question_id)
     db.add(db_quiz)
     db.commit()

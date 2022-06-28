@@ -1,12 +1,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from decouple import config
+from os import environ
 
 Base = declarative_base()
 
 # PROD
-SQLALCHEMY_DATABASE_URL = f"postgresql://POSTGRES_USER:POSTGRES_PASS@localhost:5433/POSTGRES_DB"
+SQLALCHEMY_DATABASE_URL = f"postgresql://{environ['POSTGRES_USER']}:{environ['POSTGRES_PASS']}@localhost:5433/{environ['POSTGRES_DB']}"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

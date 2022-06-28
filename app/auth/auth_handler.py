@@ -1,13 +1,13 @@
-from decouple import config
+from os import environ
 from datetime import datetime, timedelta
 
 from fastapi import HTTPException
 from jose import jwt, JWTError
 from starlette import status
 
-JWT_SECRET = config("SECRET_KEY")
-JWT_ALGORITHM = config("ALGORITHM")
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES = config("ACCESS_TOKEN_EXPIRE_MINUTES")
+JWT_SECRET = environ["SECRET_KEY"]
+JWT_ALGORITHM = environ["ALGORITHM"]
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES = environ["ACCESS_TOKEN_EXPIRE_MINUTES"]
 
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,

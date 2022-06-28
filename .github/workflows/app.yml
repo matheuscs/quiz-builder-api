@@ -18,8 +18,12 @@ jobs:
           python-version: "3.9"
       - name: Install dependencies
         run: |
-            python -m venv venv && source venv/bin/activate
+            python -m venv venv
+            source venv/bin/activate
             pip install -r requirements.txt
       - name: Test with pytest
         run: |
-          source venv/bin/activate && pytest -v
+          python -c 'import os;print(os.environ)'
+          source venv/bin/activate
+          python -c 'import os;print(os.environ)'
+          pytest -v

@@ -2,6 +2,7 @@ name: Python application
 
 jobs:
   build:
-    - name: Test with pytest
-      run: |
-        pytest -v
+    steps:
+      - name: Test with pytest
+        run: |
+          pytest -v

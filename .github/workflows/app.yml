@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.9
@@ -18,8 +18,8 @@ jobs:
           python-version: "3.9"
       - name: Install dependencies
         run: |
-            python -m venv venv && venv\Scripts\activate
+            python -m venv venv && source venv/bin/activate
             pip install -r requirements.txt
       - name: Test with pytest
         run: |
-          venv\Scripts\activate && pytest -v
+          source venv/bin/activate && pytest -v

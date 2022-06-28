@@ -1,3 +1,7 @@
+from typing import List
+
+from fastapi.encoders import jsonable_encoder
+
 from app.db import crud
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import FastAPI, Depends, HTTPException
@@ -25,9 +29,10 @@ def get_db():
 
 
 @app.post("/token", response_model=Token)
-async def login_for_access_token(
+def login_for_access_token(
         db: Session = Depends(get_db),
-        form_data: OAuth2PasswordRequestForm = Depends()):
+        form_data: OAuth2PasswordRequestForm = Depends()
+):
     user = crud.get_user_by_email(db, form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise credentials_exception
@@ -41,15 +46,17 @@ def i_am_alive():
 
 
 @app.get("/alive_secure")
-async def i_am_alive_and_secure(token: str = Depends(oauth2_scheme)):
+def i_am_alive_and_secure(token: str = Depends(oauth2_scheme)):
     decode_jwt(token)
     return {"msg": "i'm alive and secure"}
 
 
 # USERS
 @app.post("/users", response_model=schemas.User)
-def create_user(user: schemas.UserCreate,
-                db: Session = Depends(get_db)):
+def create_user(
+        user: schemas.UserCreate,
+        db: Session = Depends(get_db)
+):
     db_user = crud.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=409, detail="Email already registered")
@@ -57,9 +64,11 @@ def create_user(user: schemas.UserCreate,
 
 
 @app.get("/users/{user_id}", response_model=schemas.User)
-def get_user_by_id(user_id: int,
-                   db: Session = Depends(get_db),
-                   token: str = Depends(oauth2_scheme)):
+def get_user_by_id(
+        user_id: int,
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
     db_user = crud.get_user(db, user_id=user_id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -67,9 +76,11 @@ def get_user_by_id(user_id: int,
 
 
 @app.get("/users_by_email/{email}", response_model=schemas.User)
-def get_user_by_email(email,
-                      db: Session = Depends(get_db),
-                      token: str = Depends(oauth2_scheme)):
+def get_user_by_email(
+        email,
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
     db_user = crud.get_user_by_email(db, email=email)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -77,8 +88,10 @@ def get_user_by_email(email,
 
 
 @app.get("/users")
-def get_all_users(db: Session = Depends(get_db),
-                  token: str = Depends(oauth2_scheme)):
+def get_all_users(
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
     return crud.get_users(db)
 
 
@@ -88,14 +101,17 @@ def create_quiz_for_user(
         user_id: int,
         quiz: schemas.QuizCreate,
         db: Session = Depends(get_db),
-        token: str = Depends(oauth2_scheme)):
+        token: str = Depends(oauth2_scheme)
+):
     return crud.create_user_quiz(db=db, quiz=quiz, user_id=user_id)
 
 
 @app.get("/quiz/{quiz_id}", response_model=schemas.Quiz)
-def get_quiz_by_id(quiz_id: int,
-                   db: Session = Depends(get_db),
-                   token: str = Depends(oauth2_scheme)):
+def get_quiz_by_id(
+        quiz_id: int,
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
     db_quiz = crud.get_quiz(db, quiz_id=quiz_id)
     if db_quiz is None:
         raise HTTPException(status_code=404, detail="Question not found")
@@ -103,9 +119,55 @@ def get_quiz_by_id(quiz_id: int,
 
 
 @app.get("/quizes")
-def get_all_quizes(db: Session = Depends(get_db),
-                   token: str = Depends(oauth2_scheme)):
+def get_all_quizes(
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
     return crud.get_quizes(db)
+
+
+@app.get('/user/{user_id}/quizes', response_model=List[schemas.Quiz])
+def get_quizes_for_user(
+        user_id: int,
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+    db_quiz = crud.get_users_quizes(db, user_id=user_id)
+    if db_quiz is None:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    return db_quiz
+
+
+@app.put('/quizes/{quiz_id}', response_model=schemas.QuizUpdate)
+def update_quiz(
+        quiz_id: int,
+        quiz: schemas.QuizUpdate,
+        db: Session = Depends(get_db),
+        # token: str = Depends(oauth2_scheme)
+):
+    stored_quiz = crud.get_quiz(db, quiz_id=quiz_id)
+    if not stored_quiz:
+        raise HTTPException(
+            status_code=404
+        )
+    if stored_quiz.is_active:
+        raise HTTPException(
+            status_code=405,
+            detail="You can't update a published quiz."
+        )
+    if quiz.dict()['is_active']:
+        """
+        para ativar um quiz é necessário verificar:
+         se o quiz tem pelo menos uma pergunta
+         se cada pergunta tem pelo menos duas respostas
+         se cada pergunta tem pelo menos uma resposta certa
+        """
+        ...  # TODO
+    stored_quiz_model = schemas.QuizUpdate(**stored_quiz.__dict__)
+    update_data = quiz.dict(exclude_unset=True)
+    updated_quiz = stored_quiz_model.copy(update=update_data)
+    crud.update_quiz(db, jsonable_encoder(updated_quiz), quiz_id)
+    return updated_quiz
 
 
 # QUESTIONS
@@ -124,9 +186,11 @@ def create_question_for_quiz(
 
 
 @app.get("/question/{question_id}", response_model=schemas.Question)
-def get_question_by_id(question_id: int,
-                       db: Session = Depends(get_db),
-                       token: str = Depends(oauth2_scheme)):
+def get_question_by_id(
+        question_id: int,
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
     db_question = crud.get_question(db, question_id=question_id)
     if db_question is None:
         raise HTTPException(status_code=404, detail="Question not found")
@@ -134,8 +198,10 @@ def get_question_by_id(question_id: int,
 
 
 @app.get("/questions")
-def get_all_questions(db: Session = Depends(get_db),
-                      token: str = Depends(oauth2_scheme)):
+def get_all_questions(
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
     return crud.get_questions(db)
 
 
@@ -157,6 +223,8 @@ def create_anwswer_for_question(
 
 
 @app.get("/answers")
-def get_all_answers(db: Session = Depends(get_db),
-                    token: str = Depends(oauth2_scheme)):
+def get_all_answers(
+        db: Session = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
     return crud.get_answers(db)

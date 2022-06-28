@@ -13,7 +13,7 @@ class AnswerBase(BaseModel):
 
 
 class AnswerCreate(AnswerBase):
-    is_active = bool
+    ...
 
 
 class Answer(AnswerBase):
@@ -30,7 +30,7 @@ class QuestionBase(BaseModel):
 
 
 class QuestionCreate(QuestionBase):
-    is_active = bool
+    ...
 
 
 class Question(QuestionBase):
@@ -47,10 +47,14 @@ class QuizBase(BaseModel):
 
 
 class QuizCreate(QuizBase):
-    is_active = bool
+    ...
 
 
-class Quiz(QuizBase):
+class QuizUpdate(QuizCreate):
+    is_active: bool = False
+
+
+class Quiz(QuizUpdate):
     id: int
     user_id: int
     questions: list[Question] = []
@@ -69,7 +73,6 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
-    is_active: bool
     quizes: list[Quiz] = []
 
     class Config:

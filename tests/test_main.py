@@ -85,7 +85,7 @@ def test_create_quiz_for_user():
     response = client.post(
         f'/user/{last_user_id}/quiz',
         json={
-            "title": f"Incredible Quiz Number {random()}"
+            "title": f"Incredible Quiz No. {random()}"
         },
         headers=auth_headers
     )
@@ -93,6 +93,40 @@ def test_create_quiz_for_user():
 
     global last_quiz_id
     last_quiz_id = response.json()['id']
+
+
+def test_get_quiz_by_id():
+    response = client.get(f'/quiz/{last_quiz_id}', headers=auth_headers)
+    assert response.status_code == 200, response.text
+
+
+def test_get_quizes_for_user():
+    response = client.get(f'/user/{last_user_id}/quizes', headers=auth_headers)
+    assert response.status_code == 200, response.text
+
+
+def test_update_quiz():
+    response = client.put(
+        f'/quizes/{last_quiz_id}',
+        json={
+            "title": f"Incredible Quiz No. {random()}",
+            "is_active": "true"
+        },
+        headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+
+    response = client.put(
+        f'/quizes/{last_quiz_id}',
+        json={
+            "title": f"Incredible Quiz No. {random()}",
+            "is_active": True
+        },
+        headers=auth_headers
+    )
+    assert response.status_code == 405, response.text
+    assert response.json() == \
+           {"detail": "You can't update a published quiz."}
 
 
 def test_create_questions_for_quiz():

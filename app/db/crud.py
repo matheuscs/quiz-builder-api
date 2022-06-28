@@ -49,6 +49,15 @@ def get_quizes(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Quiz).offset(skip).limit(limit).all()
 
 
+def get_users_quizes(db: Session, user_id: int):
+    return db.query(models.Quiz).filter(models.Quiz.user_id == user_id).all()
+
+
+def update_quiz(db: Session, quiz: schemas.QuizUpdate, quiz_id: int):
+    db.query(models.Quiz).filter(models.Quiz.id == quiz_id).update(quiz)
+    db.commit()
+
+
 # QUESTION
 def create_quiz_question(db: Session, question: schemas.QuestionCreate, quiz_id: int):
     db_quiz = models.Question(**question.dict(), quiz_id=quiz_id)

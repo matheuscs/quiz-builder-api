@@ -10,7 +10,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
-    quizes = relationship("Quiz", back_populates="user")
+    quizes = relationship("Quiz", cascade="all, delete", backref="user")
 
 
 class Quiz(Base):
@@ -18,9 +18,8 @@ class Quiz(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     is_active = Column(Boolean, default=False)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    user = relationship("User", back_populates="quizes")
-    questions = relationship("Question", back_populates="quiz")
+    user_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'))
+    questions = relationship("Question", cascade="all, delete", backref="quiz")
 
 
 class Question(Base):
@@ -28,9 +27,8 @@ class Question(Base):
     id = Column(Integer, primary_key=True, index=True)
     description = Column(String, index=True)
     single_correct_answer = Column(Boolean, default=True)
-    quiz_id = Column(Integer, ForeignKey("quizes.id"))
-    quiz = relationship("Quiz", back_populates="questions")
-    answers = relationship("Answer", back_populates="question")
+    quiz_id = Column(Integer, ForeignKey("quizes.id", ondelete='CASCADE'))
+    answers = relationship("Answer", cascade="all, delete", backref="question")
 
 
 class Answer(Base):
@@ -38,5 +36,4 @@ class Answer(Base):
     id = Column(Integer, primary_key=True, index=True)
     description = Column(String, index=True)
     is_correct = Column(Boolean, default=False)
-    question_id = Column(Integer, ForeignKey("questions.id"))
-    question = relationship("Question", back_populates="answers")
+    question_id = Column(Integer, ForeignKey("questions.id", ondelete='CASCADE'))

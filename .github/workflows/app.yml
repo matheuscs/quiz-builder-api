@@ -1,5 +1,9 @@
 name: Python application
 
+on:
+  push:
+    branches: yml
+
 jobs:
   build:
     steps:

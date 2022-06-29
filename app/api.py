@@ -276,7 +276,7 @@ def create_answer_for_question(
                               question_id=question_id)
 
 
-@app.get("/answers/{answer_id}")
+@app.get("/answers/{answer_id}", response_model=schemas.Answer)
 def get_answer(
         answer_id: int,
         user_id: int = Depends(get_user_id),
@@ -328,14 +328,12 @@ def delete_answer(
 
 
 # SOLVE
-@app.post("/users/solve",
-          response_model=schemas.Solve
-          )
+@app.post("/solve", response_model=schemas.Solve)
 def create_solve(
         user_id: int = Depends(get_user_id),
         db: Session = Depends(get_db)
 ):
-    if crud.get_unfinished_solve(db, user_id=user_id):
+    if crud.get_unfinished_solves(db, user_id=user_id):
         raise HTTPException(
             status_code=409,
             detail="User already has an unfinished quiz opened"
@@ -344,10 +342,33 @@ def create_solve(
     if not db_quiz:
         raise HTTPException(
             status_code=404,
-            detail="No available quiz at the moment"
+            detail="No available quizes at the moment"
         )
     solve = models.Solve(
         user_id=user_id,
         quiz_id=db_quiz.id
     )
     return crud.create_solve(db=db, solve=solve)
+
+
+@app.get("/users/finished_solves", response_model=schemas.Solve)
+def get_finished_solves(
+        user_id: int = Depends(get_user_id),
+        db: Session = Depends(get_db)
+):
+    db_solve = crud.get_finished_solves(db, user_id=user_id)
+    if not db_solve:
+        raise HTTPException(status_code=404, detail="No solved quiz found")
+    return db_solve
+
+
+@app.get("/users/unfinished_solves", response_model=schemas.Solve)
+def get_unfinished_solves(
+        user_id: int = Depends(get_user_id),
+        db: Session = Depends(get_db)
+):
+    db_solve = crud.get_unfinished_solves(db, user_id=user_id)
+    if not db_solve:
+        raise HTTPException(status_code=404, detail="No unfinished quiz found")
+    return db_solve
+

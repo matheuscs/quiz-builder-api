@@ -174,19 +174,28 @@ def get_next_quiz_to_solve(db: Session, user_id: int):
     ).first()
 
 
-def get_finished_solve(db: Session, user_id: int, quiz_id: int):
+def get_finished_solves(db: Session, user_id: int):
     return db.query(models.Solve).filter(
         models.Solve.user_id == user_id
-    ).filter(
-        models.Solve.quiz_id == quiz_id
     ).filter(
         (models.Solve.is_finished == True)
     ).first()
 
 
-def get_unfinished_solve(db: Session, user_id: int):
+def get_unfinished_solves(db: Session, user_id: int):
     return db.query(models.Solve).filter(
         models.Solve.user_id == user_id
     ).filter(
         models.Solve.is_finished == False
     ).first()
+
+
+def get_unfinished_solve(db: Session, solve_id: int, user_id: int):
+    return db.query(models.Solve).filter(
+        models.Solve.id == solve_id
+    ).filter(
+        models.Solve.user_id == user_id
+    ).filter(
+        models.Solve.is_finished == False
+    ).first()
+

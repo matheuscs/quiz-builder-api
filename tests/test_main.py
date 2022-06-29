@@ -170,8 +170,27 @@ def test_answer_not_found():
     assert response.json() == {"detail": "Answer not found"}
 
 
+def test_create_solve_not_found():
+    response = client.post("/solve", headers=auth_headers)
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No available quizes at the moment"}
+
+
+def test_get_finished_solves_not_found():
+    response = client.get("/users/finished_solves", headers=auth_headers)
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No solved quiz found"}
+
+
+def test_get_unfinished_solves_not_found():
+    response = client.get("/users/unfinished_solves", headers=auth_headers)
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No unfinished quiz found"}
+
+
 def test_delete_answer():
-    response = client.delete(f"/answers/{last_answer_id}", headers=auth_headers)
+    response = client.delete(f"/answers/{last_answer_id}",
+                             headers=auth_headers)
     assert response.status_code == 200
     assert response.json() == {"ok": True}
 

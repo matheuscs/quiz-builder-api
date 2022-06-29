@@ -99,7 +99,7 @@ def create_quiz_for_user(
 
 
 @app.get("/quizes/{quiz_id}", response_model=schemas.Quiz)
-def get_quiz_by_id(
+def get_quiz(
         quiz_id: int,
         user_id: int = Depends(get_user_id),
         db: Session = Depends(get_db)
@@ -196,6 +196,29 @@ def get_question(
     return db_question
 
 
+@app.put('/questions/{question_id}', response_model=schemas.QuestionBase)
+def update_question(
+        question_id: int,
+        question: schemas.QuestionBase,
+        user_id: int = Depends(get_user_id),
+        db: Session = Depends(get_db)
+):
+    db_question = crud.get_question(db, question_id=question_id, user_id=user_id)
+    if not db_question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    db_quiz = crud.get_quiz(db, db_question.quiz_id, user_id=user_id)
+    if db_quiz.is_active:
+        raise HTTPException(
+            status_code=405,
+            detail="You can't update a published quiz."
+        )
+    stored_question_model = schemas.QuestionBase(**db_question.__dict__)
+    update_data = question.dict(exclude_unset=True)
+    updated_question = stored_question_model.copy(update=update_data)
+    crud.update_question(db, jsonable_encoder(updated_question), question_id)
+    return updated_question
+
+
 @app.delete("/questions/{question_id}")
 def delete_question(
         question_id: int,
@@ -211,7 +234,7 @@ def delete_question(
 
 # ANSWERS
 @app.post("/questions/{question_id}/answer", response_model=schemas.Answer)
-def create_anwswer_for_question(
+def create_answer_for_question(
         question_id: int,
         answer: schemas.AnswerCreate,
         user_id: int = Depends(get_user_id),
@@ -226,7 +249,7 @@ def create_anwswer_for_question(
 
 
 @app.get("/answers/{answer_id}")
-def get_all_answers(
+def get_answer(
         answer_id: int,
         user_id: int = Depends(get_user_id),
         db: Session = Depends(get_db)
@@ -236,6 +259,29 @@ def get_all_answers(
         raise HTTPException(status_code=404, detail="Answer not found")
     return db_answer
 
+
+@app.put('/answers/{answer_id}', response_model=schemas.AnswerCreate)
+def update_answer(
+        answer_id: int,
+        answer: schemas.AnswerCreate,
+        user_id: int = Depends(get_user_id),
+        db: Session = Depends(get_db)
+):
+    db_answer = crud.get_answer(db, answer_id=answer_id, user_id=user_id)
+    if not db_answer:
+        raise HTTPException(status_code=404, detail="Answer not found")
+    db_question = crud.get_question(db, question_id=db_answer.question_id, user_id=user_id)
+    db_quiz = crud.get_quiz(db, db_question.quiz_id, user_id=user_id)
+    if db_quiz.is_active:
+        raise HTTPException(
+            status_code=405,
+            detail="You can't update a published quiz."
+        )
+    stored_answer_model = schemas.AnswerCreate(**db_answer.__dict__)
+    update_data = answer.dict(exclude_unset=True)
+    updated_answer = stored_answer_model.copy(update=update_data)
+    crud.update_answer(db, jsonable_encoder(updated_answer), answer_id)
+    return updated_answer
 
 @app.delete("/answers/{answer_id}")
 def delete_answer(

@@ -94,6 +94,11 @@ def get_question(db: Session, question_id: int, user_id: int):
     ).first()
 
 
+def update_question(db: Session, question: schemas.QuestionBase, question_id:int):
+    db.query(models.Question).filter(models.Question.id == question_id).update(question)
+    db.commit()
+
+
 def delete_question(db: Session, question_id: int):
     db.query(models.Question).filter(models.Question.id == question_id).delete()
     db.commit()
@@ -119,6 +124,11 @@ def get_answer(db: Session, answer_id: int, user_id):
     ).filter(
         models.User.id == user_id
     ).first()
+
+
+def update_answer(db: Session, answer: schemas.AnswerCreate, answer_id:int):
+    db.query(models.Answer).filter(models.Answer.id == answer_id).update(answer)
+    db.commit()
 
 
 def delete_answer(db: Session, answer_id: int):

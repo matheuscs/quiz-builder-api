@@ -77,3 +77,24 @@ class User(UserBase):
 
     class Config:
         orm_mode = True
+
+
+class SolveBase(BaseModel):
+    user_id: int
+
+
+class SolveCreate(SolveBase):
+    quiz_id: int
+    quiz: Quiz
+
+
+class Solve(SolveCreate):
+    id: int
+    start_datetime: str
+    finish_datetime: str
+    is_finished: bool
+    score: int
+
+    class Config:
+        orm_mode = True
+

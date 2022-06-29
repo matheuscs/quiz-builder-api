@@ -297,39 +297,26 @@ def delete_answer(
 
 
 # SOLVE
-@app.post("/users/{user_id}/solve", response_model=schemas.Solve)
+@app.post("/users/solve",
+          response_model=schemas.Solve
+          )
 def create_solve(
-        solve: schemas.SolveBase,
-        db: Session = Depends(get_db),
-        # token: str = Depends(oauth2_scheme)
+        user_id: int = Depends(get_user_id),
+        db: Session = Depends(get_db)
 ):
-    if not crud.get_user(db, user_id=solve.user_id):
-        raise HTTPException(status_code=404, detail="User not found")
-    if crud.get_unfinished_solve(db, user_id=solve.user_id):
+    if crud.get_unfinished_solve(db, user_id=user_id):
         raise HTTPException(
             status_code=409,
             detail="User already has an unfinished quiz opened"
         )
-
-    db_solve = models.Solve(
-        **solve.dict(),
-        quiz_id=1
+    db_quiz = crud.get_next_quiz_to_solve(db, user_id)
+    if not db_quiz:
+        raise HTTPException(
+            status_code=404,
+            detail="No available quiz at the moment"
+        )
+    solve = models.Solve(
+        user_id=user_id,
+        quiz_id=db_quiz.id
     )
-
-    return crud.create_solve(db=db, solve=db_solve)
-
-#
-# @app.get("/users/{user_id}/solve")
-# def get_solve_by_user_id(
-#         user_id: int,
-#         db: Session = Depends(get_db),
-#         # token: str = Depends(oauth2_scheme)
-# ):
-#     db_solve = crud.get_current_solve(db, user_id=user_id)
-#     if db_solve:
-#         return crud.get_quiz(db, db_solve.quiz_id)
-#     next_quiz = crud.get_first_solvable_quiz_by_user(db, user_id)
-#     if not next_quiz:
-#         raise HTTPException(status_code=404, detail="No available quizes to solve")
-#     return next_quiz
-#
+    return crud.create_solve(db=db, solve=solve)

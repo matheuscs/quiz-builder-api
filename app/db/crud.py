@@ -134,3 +134,48 @@ def update_answer(db: Session, answer: schemas.AnswerCreate, answer_id:int):
 def delete_answer(db: Session, answer_id: int):
     db.query(models.Answer).filter(models.Answer.id == answer_id).delete()
     db.commit()
+
+
+# SOLVES
+def create_solve(db: Session, solve: schemas.SolveCreate):
+    db_solve = models.Solve(
+        user_id=solve.user_id,
+        quiz_id=solve.quiz_id,
+        start_datetime=datetime.now().isoformat(),
+    )
+    db.add(db_solve)
+    db.commit()
+    db.refresh(db_solve)
+    return db_solve
+
+
+def get_next_quiz_to_solve(db: Session, user_id: int):
+    return db.query(
+        models.Quiz
+    ).filter(
+        models.Quiz.is_active == True
+    ).filter(
+        models.Quiz.user_id != user_id
+    ).outerjoin(
+        models.Solve, models.Quiz.id == models.Solve.quiz_id
+    ).filter(
+        models.Solve.quiz_id == None
+    ).first()
+
+
+def get_finished_solve(db: Session, user_id: int, quiz_id: int):
+    return db.query(models.Solve).filter(
+        models.Solve.user_id == user_id
+    ).filter(
+        models.Solve.quiz_id == quiz_id
+    ).filter(
+        (models.Solve.is_finished == True)
+    ).first()
+
+
+def get_unfinished_solve(db: Session, user_id: int):
+    return db.query(models.Solve).filter(
+        models.Solve.user_id == user_id
+    ).filter(
+        models.Solve.is_finished == False
+    ).first()

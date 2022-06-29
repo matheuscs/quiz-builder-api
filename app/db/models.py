@@ -11,6 +11,7 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     quizes = relationship("Quiz", cascade="all, delete", backref="user")
+    solves = relationship("Solve", cascade="all, delete", backref="user")
 
 
 class Quiz(Base):
@@ -20,6 +21,7 @@ class Quiz(Base):
     is_active = Column(Boolean, default=False)
     user_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'))
     questions = relationship("Question", cascade="all, delete", backref="quiz")
+    solves = relationship("Solve", cascade="all, delete", backref="quiz")
 
 
 class Question(Base):
@@ -37,3 +39,15 @@ class Answer(Base):
     description = Column(String, index=True)
     is_correct = Column(Boolean, default=False)
     question_id = Column(Integer, ForeignKey("questions.id", ondelete='CASCADE'))
+
+
+class Solve(Base):
+    __tablename__ = "solves"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'))
+    quiz_id = Column(Integer, ForeignKey("quizes.id", ondelete='CASCADE'))
+    start_datetime = Column(String, default='')
+    finish_datetime = Column(String, default='')
+    is_finished = Column(Boolean, default=False)
+    score = Column(Integer, default=0)
+

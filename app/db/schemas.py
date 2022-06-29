@@ -18,6 +18,7 @@ class AnswerCreate(AnswerBase):
 class Answer(AnswerBase):
     id: int
     question_id: int
+    is_correct: bool
 
     class Config:
         orm_mode = True

@@ -89,7 +89,7 @@ def test_quiz_not_found():
     assert response.json() == {"detail": "Quiz not found"}
 
 
-def test_update_quiz():
+def test_update_quiz_no_questions():
     response = client.put(
         f'/quizes/{last_quiz_id}',
         json={
@@ -100,7 +100,7 @@ def test_update_quiz():
     )
     assert response.status_code == 405, response.text
     assert response.json() == \
-           {"detail": "Quiz can't be activated"}
+           {"detail": "A quiz needs at least one question to be activated"}
 
 
 def test_create_questions_for_quiz():
@@ -110,7 +110,7 @@ def test_create_questions_for_quiz():
             f'/quizes/{last_quiz_id}/question',
             json={
                 "description": f"Question {random()}",
-                "single_correct_answer": "true"
+                "single_correct_answer": "false"
             },
             headers=auth_headers
         )
@@ -121,6 +121,21 @@ def test_create_questions_for_quiz():
             assert response.status_code == 409, response.text
             assert response.json() == \
                    {"detail": "Maximum questions for a quiz reached: 10"}
+
+
+def test_update_quiz_activate_no_answers():
+    response = client.put(
+        f'/quizes/{last_quiz_id}',
+        json={
+            "title": f"Incredible Quiz No. {random()}",
+            "is_active": True
+        },
+        headers=auth_headers
+    )
+    assert response.status_code == 405, response.text
+    assert response.json() == \
+           {"detail": "A multiple correct answer question needs at least one "
+                      "correct answer for the quiz to be activated"}
 
 
 def test_question_not_found():

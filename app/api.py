@@ -138,16 +138,35 @@ def update_quiz(
             detail="You can't update a published quiz."
         )
     if quiz.dict()['is_active']:
-        """
-        para ativar um quiz é necessário verificar:
-         se o quiz tem pelo menos uma pergunta
-         se cada pergunta tem pelo menos duas respostas
-         se cada pergunta tem pelo menos uma resposta certa
-        """
-        raise HTTPException(
-            status_code=405,
-            detail="Quiz can't be activated"  # TODO
-        )
+        detail = ''
+        if not db_quiz.questions:
+            detail = "A quiz needs at least one question to be activated"
+        for question in db_quiz.questions:
+            if len(question.answers) < 2:
+                detail = "A question needs at leat two answers " \
+                         "for the quiz to be activated"
+
+            count_correct_answer = 0
+            for answer in question.answers:
+                count_correct_answer += 1 if answer.is_correct else 0
+            if question.single_correct_answer:
+                if count_correct_answer == 0:
+                    detail = "A single correct answer question needs a " \
+                             "correct answer for the quiz to be activated"
+                elif count_correct_answer > 1:
+                    detail = "A single correct answer question can have " \
+                             "just one correct answer for the quiz to be " \
+                             "activated"
+            else:
+                if count_correct_answer == 0:
+                    detail = "A multiple correct answer question needs at " \
+                             "least one correct answer for the quiz to be " \
+                             "activated"
+        if detail:
+            raise HTTPException(
+                status_code=405,
+                detail=detail
+            )
     stored_quiz_model = schemas.QuizUpdate(**db_quiz.__dict__)
     update_data = quiz.dict(exclude_unset=True)
     updated_quiz = stored_quiz_model.copy(update=update_data)

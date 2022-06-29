@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.auth.auth_bearer import get_password_hash
@@ -42,8 +43,16 @@ def create_quiz(db: Session, quiz: schemas.QuizCreate, user_id: int):
     return db_quiz
 
 
-def get_quiz(db: Session, quiz_id: int):
-    return db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
+def get_quiz(db: Session, quiz_id: int, user_id: int):
+    return db.query(models.Quiz).filter(
+        models.Quiz.id == quiz_id
+    ).filter(
+        models.Quiz.user_id == user_id
+    ).first()
+
+
+def get_quizes_not_by_user(db: Session, user_id: int):
+    return db.query(models.Quiz).filter(models.Quiz.user_id != user_id).all()
 
 
 def get_quizes_by_user(db: Session, user_id: int):
@@ -55,8 +64,12 @@ def update_quiz(db: Session, quiz: schemas.QuizUpdate, quiz_id: int):
     db.commit()
 
 
-def delete_quiz(db: Session, quiz_id: int):
-    db.query(models.Quiz).filter(models.Quiz.id == quiz_id).delete()
+def delete_quiz(db: Session, quiz_id: int, user_id: int):
+    db.query(models.Quiz).filter(
+        models.Quiz.id == quiz_id
+    ).filter(
+        models.Quiz.user_id == user_id
+    ).delete()
     db.commit()
 
 
@@ -69,9 +82,15 @@ def create_question(db: Session, question: schemas.QuestionCreate, quiz_id: int)
     return db_quiz
 
 
-def get_question(db: Session, question_id: int):
-    return db.query(models.Question).filter(
+def get_question(db: Session, question_id: int, user_id: int):
+    return db.query(
+        models.Question
+    ).join(models.Quiz, models.Quiz.id == models.Question.quiz_id
+    ).join(models.User, models.User.id == models.Quiz.user_id
+    ).filter(
         models.Question.id == question_id
+    ).filter(
+        models.User.id == user_id
     ).first()
 
 
@@ -89,8 +108,17 @@ def create_answer(db: Session, answer: schemas.AnswerCreate, question_id: int):
     return db_quiz
 
 
-def get_answer(db: Session, answer_id: int):
-    return db.query(models.Answer).filter(models.Answer.id == answer_id).first()
+def get_answer(db: Session, answer_id: int, user_id):
+    return db.query(
+        models.Answer
+    ).join(models.Question, models.Question.id == models.Answer.question_id
+    ).join(models.Quiz, models.Quiz.id == models.Question.quiz_id
+    ).join(models.User, models.User.id == models.Quiz.user_id
+    ).filter(
+        models.Answer.id == answer_id
+    ).filter(
+        models.User.id == user_id
+    ).first()
 
 
 def delete_answer(db: Session, answer_id: int):

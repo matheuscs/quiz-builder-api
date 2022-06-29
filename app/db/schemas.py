@@ -9,11 +9,10 @@ class Token(BaseModel):
 
 class AnswerBase(BaseModel):
     description: str
-    is_correct: bool
 
 
 class AnswerCreate(AnswerBase):
-    ...
+    is_correct: bool
 
 
 class Answer(AnswerBase):
@@ -73,6 +72,7 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
+    is_active: bool
     quizes: list[Quiz] = []
 
     class Config:

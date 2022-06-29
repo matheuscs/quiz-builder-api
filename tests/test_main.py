@@ -15,24 +15,13 @@ def override_get_db():
 app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
-token = ''
+
 auth_headers = ''
-email = ''
-last_user_id = 0
 last_quiz_id = 0
 last_question_id = 0
 last_answer_id = 0
-
-
-def test_alive():
-    response = client.get("/alive")
-    assert response.status_code == 200
-    assert response.json() == {"msg": "i'm alive"}
-
-
-def test_alive_secure_unauthorized():
-    response = client.get("/alive_secure")
-    assert response.status_code == 401
+EMAIL = f'tester{random()}@testing.com'
+PASS = 'secret'
 
 
 def test_get_all_users_unauthorized():
@@ -41,56 +30,38 @@ def test_get_all_users_unauthorized():
 
 
 def test_create_user():
-    global email
-    email = f"newtester{random()}@testing.com"
     response = client.post(
         "/users",
         json={
-            "email": email,
-            "password": "abc123"
+            "email": EMAIL,
+            "password": PASS
         },
     )
     assert response.status_code == 200, response.text
-
-    global last_user_id
-    last_user_id = response.json()['id']
 
 
 def test_authenticate():
     response = client.post(
         '/token',
-        data={'username': email, 'password': 'abc123'}
+        data={'username': EMAIL, 'password': PASS}
     )
     assert response.status_code == 200
 
-    global token
-    token = response.json()["access_token"]
-
     global auth_headers
-    auth_headers = {'Authorization': f'Bearer {token}',
-                    'Accept': 'application/json'}
+    auth_headers = {
+        'Authorization': f'Bearer {response.json()["access_token"]}',
+        'Accept': 'application/json'
+    }
 
 
-def test_alive_secure():
-    response = client.get("/alive_secure", headers=auth_headers)
-    assert response.status_code == 200
-    assert response.json() == {"msg": "I'm alive and secure"}
-
-
-def test_get_all_users():
+def test_get_user():
     response = client.get("/users", headers=auth_headers)
     assert response.status_code == 200
 
 
-def test_user_not_found():
-    response = client.get("/users/-1", headers=auth_headers)
-    assert response.status_code == 404
-    assert response.json() == {"detail": "User not found"}
-
-
 def test_create_quiz_for_user():
     response = client.post(
-        f'/users/{last_user_id}/quiz',
+        f'/users/quiz',
         json={
             "title": f"Incredible Quiz No. {random()}"
         },
@@ -102,13 +73,13 @@ def test_create_quiz_for_user():
     last_quiz_id = response.json()['id']
 
 
-def test_get_quiz_by_id():
-    response = client.get(f'/quizes/{last_quiz_id}', headers=auth_headers)
+def test_get_quizes():
+    response = client.get(f'/quizes', headers=auth_headers)
     assert response.status_code == 200, response.text
 
 
-def test_get_quizes_for_user():
-    response = client.get(f'/users/{last_user_id}/quiz', headers=auth_headers)
+def test_quiz_by_id():
+    response = client.get(f"/quizes/{last_quiz_id}", headers=auth_headers)
     assert response.status_code == 200, response.text
 
 
@@ -123,23 +94,13 @@ def test_update_quiz():
         f'/quizes/{last_quiz_id}',
         json={
             "title": f"Incredible Quiz No. {random()}",
-            "is_active": "true"
-        },
-        headers=auth_headers
-    )
-    assert response.status_code == 200, response.text
-
-    response = client.put(
-        f'/quizes/{last_quiz_id}',
-        json={
-            "title": f"Incredible Quiz No. {random()}",
             "is_active": True
         },
         headers=auth_headers
     )
     assert response.status_code == 405, response.text
     assert response.json() == \
-           {"detail": "You can't update a published quiz."}
+           {"detail": "Quiz can't be activated"}
 
 
 def test_create_questions_for_quiz():
@@ -228,15 +189,3 @@ def test_delete_not_found_quiz():
     response = client.delete(f"/quizes/-1", headers=auth_headers)
     assert response.status_code == 404
     assert response.json() == {"detail": "Quiz not found"}
-
-
-def test_delete_user():
-    response = client.delete(f"/users/{last_user_id}", headers=auth_headers)
-    assert response.status_code == 200
-    assert response.json() == {"ok": True}
-
-
-def test_delete_not_found_user():
-    response = client.delete(f"/users/-1", headers=auth_headers)
-    assert response.status_code == 404
-    assert response.json() == {"detail": "User not found"}

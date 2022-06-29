@@ -24,7 +24,7 @@ EMAIL = f'tester{random()}@testing.com'
 PASS = 'secret'
 
 
-def test_get_all_users_unauthorized():
+def test_get_current_user_unauthorized():
     response = client.get("/users")
     assert response.status_code == 401
 

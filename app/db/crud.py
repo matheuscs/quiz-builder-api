@@ -51,10 +51,6 @@ def get_quiz(db: Session, quiz_id: int, user_id: int):
     ).first()
 
 
-def get_quizes_not_by_user(db: Session, user_id: int):
-    return db.query(models.Quiz).filter(models.Quiz.user_id != user_id).all()
-
-
 def get_quizes_by_user(db: Session, user_id: int):
     return db.query(models.Quiz).filter(models.Quiz.user_id == user_id).all()
 
@@ -74,7 +70,9 @@ def delete_quiz(db: Session, quiz_id: int, user_id: int):
 
 
 # QUESTION
-def create_question(db: Session, question: schemas.QuestionCreate, quiz_id: int):
+def create_question(db: Session,
+                    question: schemas.QuestionCreate,
+                    quiz_id: int):
     db_quiz = models.Question(**question.dict(), quiz_id=quiz_id)
     db.add(db_quiz)
     db.commit()
@@ -85,8 +83,10 @@ def create_question(db: Session, question: schemas.QuestionCreate, quiz_id: int)
 def get_question(db: Session, question_id: int, user_id: int):
     return db.query(
         models.Question
-    ).join(models.Quiz, models.Quiz.id == models.Question.quiz_id
-    ).join(models.User, models.User.id == models.Quiz.user_id
+    ).join(
+        models.Quiz, models.Quiz.id == models.Question.quiz_id
+    ).join(
+        models.User, models.User.id == models.Quiz.user_id
     ).filter(
         models.Question.id == question_id
     ).filter(
@@ -94,13 +94,19 @@ def get_question(db: Session, question_id: int, user_id: int):
     ).first()
 
 
-def update_question(db: Session, question: schemas.QuestionBase, question_id:int):
-    db.query(models.Question).filter(models.Question.id == question_id).update(question)
+def update_question(db: Session,
+                    question: schemas.QuestionBase,
+                    question_id: int):
+    db.query(models.Question).filter(
+        models.Question.id == question_id
+    ).update(question)
     db.commit()
 
 
 def delete_question(db: Session, question_id: int):
-    db.query(models.Question).filter(models.Question.id == question_id).delete()
+    db.query(models.Question).filter(
+        models.Question.id == question_id
+    ).delete()
     db.commit()
 
 
@@ -116,9 +122,12 @@ def create_answer(db: Session, answer: schemas.AnswerCreate, question_id: int):
 def get_answer(db: Session, answer_id: int, user_id):
     return db.query(
         models.Answer
-    ).join(models.Question, models.Question.id == models.Answer.question_id
-    ).join(models.Quiz, models.Quiz.id == models.Question.quiz_id
-    ).join(models.User, models.User.id == models.Quiz.user_id
+    ).join(
+        models.Question, models.Question.id == models.Answer.question_id
+    ).join(
+        models.Quiz, models.Quiz.id == models.Question.quiz_id
+    ).join(
+        models.User, models.User.id == models.Quiz.user_id
     ).filter(
         models.Answer.id == answer_id
     ).filter(
@@ -126,8 +135,10 @@ def get_answer(db: Session, answer_id: int, user_id):
     ).first()
 
 
-def update_answer(db: Session, answer: schemas.AnswerCreate, answer_id:int):
-    db.query(models.Answer).filter(models.Answer.id == answer_id).update(answer)
+def update_answer(db: Session, answer: schemas.AnswerCreate, answer_id: int):
+    db.query(models.Answer).filter(
+        models.Answer.id == answer_id
+    ).update(answer)
     db.commit()
 
 

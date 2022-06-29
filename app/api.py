@@ -61,7 +61,8 @@ def login_for_access_token(
         form_data: OAuth2PasswordRequestForm = Depends()
 ):
     user = crud.get_user_by_email(db, form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user or not verify_password(form_data.password,
+                                       user.hashed_password):
         raise credentials_exception
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
@@ -190,7 +191,9 @@ def get_question(
         user_id: int = Depends(get_user_id),
         db: Session = Depends(get_db)
 ):
-    db_question = crud.get_question(db, question_id=question_id, user_id=user_id)
+    db_question = crud.get_question(db,
+                                    question_id=question_id,
+                                    user_id=user_id)
     if db_question is None:
         raise HTTPException(status_code=404, detail="Question not found")
     return db_question
@@ -203,7 +206,9 @@ def update_question(
         user_id: int = Depends(get_user_id),
         db: Session = Depends(get_db)
 ):
-    db_question = crud.get_question(db, question_id=question_id, user_id=user_id)
+    db_question = crud.get_question(db,
+                                    question_id=question_id,
+                                    user_id=user_id)
     if not db_question:
         raise HTTPException(status_code=404, detail="Question not found")
     db_quiz = crud.get_quiz(db, db_question.quiz_id, user_id=user_id)
@@ -225,7 +230,9 @@ def delete_question(
         user_id: int = Depends(get_user_id),
         db: Session = Depends(get_db)
 ):
-    db_question = crud.get_question(db, question_id=question_id, user_id=user_id)
+    db_question = crud.get_question(db,
+                                    question_id=question_id,
+                                    user_id=user_id)
     if not db_question:
         raise HTTPException(status_code=404, detail="Question not found")
     crud.delete_question(db, question_id=question_id)
@@ -240,7 +247,9 @@ def create_answer_for_question(
         user_id: int = Depends(get_user_id),
         db: Session = Depends(get_db)
 ):
-    db_question = crud.get_question(db, question_id=question_id, user_id=user_id)
+    db_question = crud.get_question(db,
+                                    question_id=question_id,
+                                    user_id=user_id)
     if len(db_question.answers) >= 5:
         raise HTTPException(status_code=409,
                             detail="Maximum answers for a question reached: 5")
@@ -270,7 +279,9 @@ def update_answer(
     db_answer = crud.get_answer(db, answer_id=answer_id, user_id=user_id)
     if not db_answer:
         raise HTTPException(status_code=404, detail="Answer not found")
-    db_question = crud.get_question(db, question_id=db_answer.question_id, user_id=user_id)
+    db_question = crud.get_question(db,
+                                    question_id=db_answer.question_id,
+                                    user_id=user_id)
     db_quiz = crud.get_quiz(db, db_question.quiz_id, user_id=user_id)
     if db_quiz.is_active:
         raise HTTPException(
@@ -282,6 +293,7 @@ def update_answer(
     updated_answer = stored_answer_model.copy(update=update_data)
     crud.update_answer(db, jsonable_encoder(updated_answer), answer_id)
     return updated_answer
+
 
 @app.delete("/answers/{answer_id}")
 def delete_answer(

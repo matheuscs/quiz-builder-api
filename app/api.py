@@ -372,3 +372,36 @@ def get_unfinished_solves(
         raise HTTPException(status_code=404, detail="No unfinished quiz found")
     return db_solve
 
+
+@app.put("/solve/{solve_id}")
+def update_solve(
+        solve_id: int,
+        answers_solutions: List[schemas.AnswerSolution],
+        user_id: int = Depends(get_user_id),
+        db: Session = Depends(get_db)
+):
+    db_solve = crud.get_unfinished_solve(db,
+                                         solve_id=solve_id,
+                                         user_id=user_id)
+    if not db_solve:
+        raise HTTPException(
+            status_code=404,
+            detail="No unfinished quiz found"
+        )
+
+    user_answers = {}
+    for item in answers_solutions:
+        user_answers[item.id] = item.user_answer
+
+    dict_solve = model_to_dict(db_solve.quiz, max_depth=2)
+    try:
+        scores = math.calculate_scores(dict_solve['questions'], user_answers)
+    except (ValueError, KeyError) as e:
+        raise HTTPException(
+            status_code=404,
+            detail=repr(e)
+        ) from e
+    # scores = math.calculate_scores(dict_solve['questions'], user_answers)
+    # crud.update_solve(db, solve=db_solve, solve_id=solve_id, score=score)
+
+    return scores

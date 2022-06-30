@@ -1,5 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 
 from .database import Base
 
@@ -49,5 +49,13 @@ class Solve(Base):
     start_datetime = Column(String, default='')
     finish_datetime = Column(String, default='')
     is_finished = Column(Boolean, default=False)
-    score = Column(Integer, default=0)
+    quiz_score = Column(Integer, default=0)
+    question_scores = relationship("QuestionScore", cascade="all, delete", backref="solve")
 
+
+class QuestionScore(Base):
+    __tablename__ = "questionscores"
+    id = Column(Integer, primary_key=True, index=True)
+    solve_id = Column(Integer, ForeignKey("solves.id", ondelete='CASCADE'))
+    question_id = Column(Integer)
+    score = Column(Integer)

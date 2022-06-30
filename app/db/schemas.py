@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import Union
 
 
 class Token(BaseModel):
@@ -10,6 +9,9 @@ class Token(BaseModel):
 class AnswerBase(BaseModel):
     description: str
 
+    class Config:
+        orm_mode = True
+
 
 class AnswerCreate(AnswerBase):
     is_correct: bool
@@ -18,15 +20,19 @@ class AnswerCreate(AnswerBase):
 class Answer(AnswerBase):
     id: int
     question_id: int
-    is_correct: bool
 
-    class Config:
-        orm_mode = True
+
+class AnswerSolution(BaseModel):
+    id: int
+    user_answer: bool
 
 
 class QuestionBase(BaseModel):
     description: str
     single_correct_answer: bool
+
+    class Config:
+        orm_mode = True
 
 
 class QuestionCreate(QuestionBase):
@@ -38,12 +44,12 @@ class Question(QuestionBase):
     quiz_id: int
     answers: list[Answer] = []
 
-    class Config:
-        orm_mode = True
-
 
 class QuizBase(BaseModel):
     title: str
+
+    class Config:
+        orm_mode = True
 
 
 class QuizCreate(QuizBase):
@@ -59,12 +65,12 @@ class Quiz(QuizUpdate):
     user_id: int
     questions: list[Question] = []
 
-    class Config:
-        orm_mode = True
-
 
 class UserBase(BaseModel):
     email: str
+
+    class Config:
+        orm_mode = True
 
 
 class UserCreate(UserBase):
@@ -76,12 +82,31 @@ class User(UserBase):
     is_active: bool
     quizes: list[Quiz] = []
 
+
+class QuestionScoreUpdate(BaseModel):
+    question_id: int
+    score: int
+
+
+class QuestionScoreCreate(BaseModel):
+    id: int
+
     class Config:
         orm_mode = True
 
 
+class QuestionScore(QuestionScoreCreate):
+    id: int
+    solve_id: int
+    question_id: int
+    score: int
+
+
 class SolveBase(BaseModel):
     user_id: int
+
+    class Config:
+        orm_mode = True
 
 
 class SolveCreate(SolveBase):
@@ -94,8 +119,14 @@ class Solve(SolveCreate):
     start_datetime: str
     finish_datetime: str
     is_finished: bool
-    score: int
+    quiz_score: int
+    question_scores: list[QuestionScore] = []
+
+
+class SolveUpdate(BaseModel):
+    id: int
+    user_id: int
+    quiz_id: int
 
     class Config:
         orm_mode = True
-

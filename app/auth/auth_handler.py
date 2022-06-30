@@ -1,6 +1,5 @@
-from decouple import config
 from datetime import datetime, timedelta
-
+from decouple import config
 from fastapi import HTTPException
 from jose import jwt, JWTError
 from starlette import status

@@ -1,18 +1,19 @@
-from typing import List
-
-from fastapi.encoders import jsonable_encoder
-
-from app.db import crud
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
+from typing import List
 
 from app.auth.auth_bearer import verify_password
 from app.auth.auth_handler import create_access_token, decode_jwt, \
     credentials_exception
+from app.db import crud
 from app.db import models, schemas
 from app.db.database import engine, SessionLocal
 from app.db.schemas import Token
+from app.helpers import math, math2
+
+from fastapi.encoders import jsonable_encoder
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -388,20 +389,35 @@ def update_solve(
             status_code=404,
             detail="No unfinished quiz found"
         )
+    stored_solve_model = schemas.SolveUpdate(**db_solve.__dict__)
 
     user_answers = {}
     for item in answers_solutions:
         user_answers[item.id] = item.user_answer
 
-    dict_solve = model_to_dict(db_solve.quiz, max_depth=2)
     try:
-        scores = math.calculate_scores(dict_solve['questions'], user_answers)
+        question_scores, quiz_score = \
+            math2.calculate_scores2(db_solve.quiz.questions, user_answers)
     except (ValueError, KeyError) as e:
         raise HTTPException(
             status_code=404,
             detail=repr(e)
         ) from e
-    # scores = math.calculate_scores(dict_solve['questions'], user_answers)
-    # crud.update_solve(db, solve=db_solve, solve_id=solve_id, score=score)
 
-    return scores
+    for qs in question_scores:
+        crud.create_question_score(
+            db,
+            question_id=qs['question_id'],
+            score=qs['score'],
+            solve_id=solve_id
+        )
+
+    update_data = {
+        'quiz_score': quiz_score,
+        'is_finished': True,
+        'finish_datetime': datetime.utcnow().isoformat()
+        }
+    updated_solve = stored_solve_model.copy(update=update_data)
+    crud.update_solve(db, jsonable_encoder(updated_solve), solve_id)
+
+    return updated_solve

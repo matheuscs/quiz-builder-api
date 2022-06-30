@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from sqlalchemy import exists
 from sqlalchemy.orm import Session
 
 from app.auth.auth_bearer import get_password_hash
@@ -152,7 +154,7 @@ def create_solve(db: Session, solve: schemas.SolveCreate):
     db_solve = models.Solve(
         user_id=solve.user_id,
         quiz_id=solve.quiz_id,
-        start_datetime=datetime.now().isoformat(),
+        start_datetime=datetime.utcnow().isoformat(),
     )
     db.add(db_solve)
     db.commit()
@@ -167,10 +169,11 @@ def get_next_quiz_to_solve(db: Session, user_id: int):
         models.Quiz.is_active == True
     ).filter(
         models.Quiz.user_id != user_id
-    ).outerjoin(
-        models.Solve, models.Quiz.id == models.Solve.quiz_id
     ).filter(
-        models.Solve.quiz_id == None
+        ~ exists().where(
+            (models.Quiz.id == models.Solve.quiz_id) &
+            (models.Solve.user_id == user_id)
+        )
     ).first()
 
 
@@ -198,4 +201,22 @@ def get_unfinished_solve(db: Session, solve_id: int, user_id: int):
     ).filter(
         models.Solve.is_finished == False
     ).first()
+
+
+def update_solve(db: Session, solve: schemas.Solve, solve_id: int):
+    db.query(models.Solve).filter(models.Solve.id == solve_id).update(solve)
+    db.commit()
+
+
+def create_question_score(db: Session,
+                          question_id: int,
+                          score: int,
+                          solve_id: int):
+    db_question_score = models.QuestionScore(
+        question_id=question_id, score=score, solve_id=solve_id
+    )
+    db.add(db_question_score)
+    db.commit()
+    db.refresh(db_question_score)
+    return db_question_score
 

@@ -9,7 +9,7 @@ from app.db import crud
 from app.db import models, schemas
 from app.db.database import engine, SessionLocal
 from app.db.schemas import Token
-from app.helpers import math, math2
+from app.helpers import math
 
 from fastapi.encoders import jsonable_encoder
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -91,7 +91,7 @@ def read_users_me(
 # QUIZES
 @app.post("/users/quiz", response_model=schemas.Quiz)
 def create_quiz_for_user(
-        quiz: schemas.QuizCreate,
+        quiz: schemas.QuizBase,
         user_id: int = Depends(get_user_id),
         db: Session = Depends(get_db)
 ):
@@ -192,7 +192,7 @@ def delete_quiz(
 @app.post("/quizes/{quiz_id}/question", response_model=schemas.Question)
 def create_question_for_quiz(
         quiz_id: int,
-        question: schemas.QuestionCreate,
+        question: schemas.QuestionBase,
         user_id: int = Depends(get_user_id),
         db: Session = Depends(get_db)
 ):
@@ -374,7 +374,7 @@ def get_unfinished_solves(
     return db_solve
 
 
-@app.put("/solve/{solve_id}")
+@app.put("/solve/{solve_id}", response_model=schemas.SolveUpdate)
 def update_solve(
         solve_id: int,
         answers_solutions: List[schemas.AnswerSolution],
@@ -387,7 +387,7 @@ def update_solve(
     if not db_solve:
         raise HTTPException(
             status_code=404,
-            detail="No unfinished quiz found"
+            detail="Unfinished quiz not found"
         )
     stored_solve_model = schemas.SolveUpdate(**db_solve.__dict__)
 
@@ -397,7 +397,7 @@ def update_solve(
 
     try:
         question_scores, quiz_score = \
-            math2.calculate_scores2(db_solve.quiz.questions, user_answers)
+            math.calculate_scores(db_solve.quiz.questions, user_answers)
     except (ValueError, KeyError) as e:
         raise HTTPException(
             status_code=404,
@@ -421,3 +421,17 @@ def update_solve(
     crud.update_solve(db, jsonable_encoder(updated_solve), solve_id)
 
     return updated_solve
+
+
+@app.get("/quizes/{quiz_id}/solves", response_model=list[schemas.GetSolve])
+def get_solutions_for_quizes(
+        quiz_id: int,
+        user_id: int = Depends(get_user_id),
+        db: Session = Depends(get_db)
+):
+    db_quiz = crud.get_quiz(db, quiz_id=quiz_id, user_id=user_id)
+    if db_quiz is None:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    db_solves = crud.get_finished_solves_by_quiz(db, quiz_id=quiz_id)
+
+    return db_solves

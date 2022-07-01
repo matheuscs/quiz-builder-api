@@ -37,7 +37,7 @@ def delete_user(db: Session, user_id: int):
 
 
 # QUIZES
-def create_quiz(db: Session, quiz: schemas.QuizCreate, user_id: int):
+def create_quiz(db: Session, quiz: schemas.QuizBase, user_id: int):
     db_quiz = models.Quiz(**quiz.dict(), user_id=user_id)
     db.add(db_quiz)
     db.commit()
@@ -73,7 +73,7 @@ def delete_quiz(db: Session, quiz_id: int, user_id: int):
 
 # QUESTION
 def create_question(db: Session,
-                    question: schemas.QuestionCreate,
+                    question: schemas.QuestionBase,
                     quiz_id: int):
     db_quiz = models.Question(**question.dict(), quiz_id=quiz_id)
     db.add(db_quiz)
@@ -183,6 +183,14 @@ def get_finished_solves(db: Session, user_id: int):
     ).filter(
         (models.Solve.is_finished == True)
     ).first()
+
+
+def get_finished_solves_by_quiz(db: Session, quiz_id: int):
+    return db.query(models.Solve).filter(
+        models.Solve.quiz_id == quiz_id
+    ).filter(
+        (models.Solve.is_finished == True)
+    ).all()
 
 
 def get_unfinished_solves(db: Session, user_id: int):

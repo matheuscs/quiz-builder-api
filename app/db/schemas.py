@@ -27,16 +27,23 @@ class AnswerSolution(BaseModel):
     user_answer: bool
 
 
+class AnswerMock(BaseModel):
+    id: int
+    is_correct: bool
+
+
+class QuestionMock(BaseModel):
+    id: int
+    single_correct_answer: bool
+    answers: list[AnswerMock]
+
+
 class QuestionBase(BaseModel):
     description: str
     single_correct_answer: bool
 
     class Config:
         orm_mode = True
-
-
-class QuestionCreate(QuestionBase):
-    ...
 
 
 class Question(QuestionBase):
@@ -52,11 +59,7 @@ class QuizBase(BaseModel):
         orm_mode = True
 
 
-class QuizCreate(QuizBase):
-    ...
-
-
-class QuizUpdate(QuizCreate):
+class QuizUpdate(QuizBase):
     is_active: bool = False
 
 
@@ -127,6 +130,25 @@ class SolveUpdate(BaseModel):
     id: int
     user_id: int
     quiz_id: int
+    start_datetime: str
+    finish_datetime: str
+    is_finished: bool
+    quiz_score: int
 
     class Config:
         orm_mode = True
+
+
+class GetSolve(BaseModel):
+    id: int
+    user_id: int
+    quiz_id: int
+    start_datetime: str
+    finish_datetime: str
+    is_finished: bool
+    quiz_score: int
+    question_scores: list[QuestionScore] = []
+
+    class Config:
+        orm_mode = True
+

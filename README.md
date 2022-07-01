@@ -26,6 +26,15 @@ python -m venv venv && venv\Scripts\activate
 SECRET_KEY = "generate yours with: openssl rand -hex 32"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+POSTGRES_DB = quiz-builder
+POSTGRES_DB_TEST = quiz-builder-test
+POSTGRES_USER = postgres_username
+POSTGRES_PASS = postgres_password
+```
+
+### Test
+```
+pytest
 ```
 
 ### Run
@@ -36,3 +45,7 @@ python main.py
 ### Documentation
 
 http://localhost:8081/docs
+
+### Video demonstration
+
+https://youtu.be/dNGkVJksqa4
